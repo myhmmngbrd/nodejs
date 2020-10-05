@@ -21,7 +21,7 @@ const server = http.createServer(async (req, res) => {
     const { method, url } = req;
     console.log("\x1b[36m%s\x1b[0m", method, url);
     const parsedURL = parseURL(url);
-    //console.log(parsedURL);
+    //console.log(parsedURL)
 
     try {
         
@@ -30,7 +30,11 @@ const server = http.createServer(async (req, res) => {
                 const data = await fs.readFile(path.join(sourcedir, 'index.html'));
                 res.writeHead(200);
                 res.end(data);
-            } else { //public source
+            } 
+
+            //router
+
+            else { //public source
                 const data = await fs.readFile(path.join(sourcedir, parsedURL.source))
                 res.writeHead(200);
                 res.end(data);
