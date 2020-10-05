@@ -9,7 +9,7 @@ const server = http.createServer(async (req, res) => {
         const sourcefiles = await fs.readdir(sourcedir);
 
         for (const file in sourcefiles) {
-            console.log(file)
+            const stat = fs.stat(file)
         }
 
     } catch (error) {
