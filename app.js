@@ -1,61 +1,52 @@
-const { resolveNaptr } = require('dns');
 const http = require('http');
 const fs = require('fs').promises;
 const path = require('path');
 
+const Router = require('./lib/router.js');
 
-function parseURL(url) {
-    url = url.split('/');
-    while ((index = url.indexOf('')) != -1) {
-        url.splice(index, 1)
-    }
-    source = url.join('/')
-    filename = url.reverse()[0]
-    return { source, filename }
-}
+const sourcedir = path.join(__dirname, 'public');
 
-const rootdir = __dirname;
-const sourcedir = path.join(rootdir, 'public');
+router = Router()
 
-const server = http.createServer(async (req, res) => {
-    const { method, url } = req;
-    console.log("\x1b[36m%s\x1b[0m", method, url);
-    const parsedURL = parseURL(url);
-    //console.log(parsedURL)
-
-    try {
-        
-        if (method ==='GET') {
-            if (!parsedURL.source.length) { //홈페이지
-                const data = await fs.readFile(path.join(sourcedir, 'index.html'));
-                res.writeHead(200);
-                res.end(data);
-            } 
-
-            //router
-
-            else { //public source
-                const data = await fs.readFile(path.join(sourcedir, parsedURL.source))
-                res.writeHead(200);
-                res.end(data);
-            }
-        } else if (method == 'POST') {
-            const sourcefiles = await fs.readdir(sourcedir);
-            for (const index in sourcefiles) {
-                const filename = sourcefiles[index];
-                const stat = await fs.lstat(path.join(sourcedir, filename));
-                console.log(`filename: ${filename}, isfile: ${stat.isFile()}`);
-            }
-        }
-
-        
-
-    } catch (error) {
-        console.error(error)
-    }
-
+router.get('/', async (req, res) => {
+    const data = await fs.readFile(path.join(sourcedir, 'index.html'));
+    res.writeHead(200);
+    res.end(data);
 })
+
+router.post('/', async (req, res) => {
+    req.on('data', async (data) => {
+        try {
+            data = JSON.parse(data);
+            console.log(data);
+            const readdir = path.join(sourcedir, data.dir ? data.dir : '/');
+            const files = await fs.readdir(readdir);
+            const responseData = {
+                root: data.dir ? data.dir : '/',
+                files: []
+            }
+            for (i in files) {
+                const name = files[i];
+                const stat = await fs.lstat(path.join(readdir, name));
+                const isfile = await stat.isFile();
+                console.log('\t', name, isfile);
+                responseData.files.push({ name, isfile });
+            }
+            res.writeHead(200);
+            res.end(JSON.stringify(responseData));
+        } catch (err) {
+            console.error(err);
+        }
+    });
+})
+
+
+const server = http.createServer(router)
 
 server.listen(3000, () => {
     console.log('server is running...');
 })
+
+
+
+

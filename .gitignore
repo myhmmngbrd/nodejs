@@ -102,3 +102,6 @@ dist
 
 # TernJS port file
 .tern-port
+
+#너무 큰 용량 파일
+public/media/

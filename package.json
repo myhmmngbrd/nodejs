@@ -16,7 +16,5 @@
     "url": "https://github.com/myhmmngbrd/nodejs/issues"
   },
   "homepage": "https://github.com/myhmmngbrd/nodejs#readme",
-  "dependencies": {
-    "nodemon": "^2.0.4"
-  }
+  "dependencies": {}
 }
