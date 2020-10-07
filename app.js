@@ -1,3 +1,4 @@
+const { read } = require('fs');
 const http = require('http');
 const fs = require('fs').promises;
 const path = require('path');
@@ -15,30 +16,24 @@ router.get('/', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-    req.on('data', async (data) => {
-        try {
-            data = JSON.parse(data);
-            console.log(data);
-            const readdir = path.join(sourcedir, data.dir ? data.dir : '/');
-            const files = await fs.readdir(readdir);
-            const responseData = {
-                root: data.dir ? data.dir : '/',
-                files: []
-            }
-            for (i in files) {
-                const name = files[i];
-                const stat = await fs.lstat(path.join(readdir, name));
-                const isfile = await stat.isFile();
-                console.log('\t', name, isfile);
-                responseData.files.push({ name, isfile });
-            }
-            res.writeHead(200);
-            res.end(JSON.stringify(responseData));
-        } catch (err) {
-            console.error(err);
-        }
-    });
+    const filelist = await readAllDir(path.join(__dirname, 'public'));
+    res.writeHead(200);
+    console.log(filelist);
+    res.end(JSON.stringify(filelist));
 })
+
+async function readAllDir(dir) {
+    const filelist = []
+    const files = await fs.readdir(dir);
+    for (i in files) {
+        const name = files[i];
+        const stats = await fs.lstat(path.join(dir, name));
+        const isfile = await stats.isFile();
+        const childlist = isfile ? null : await readAllDir(path.join(dir, name));
+        filelist.push({ name, childlist });
+    }
+    return filelist;
+}
 
 
 const server = http.createServer(router)

@@ -1,48 +1,60 @@
 
 
-function readdir(dir = null) {
-    const widget = document.querySelector('#dir');
-    widget.innerHTML = '';
-    const index = document.createElement('ol');
-    widget.appendChild(index);
-    
-    const xhr = new XMLHttpRequest();
-    xhr.onload = function() {
-        data = JSON.parse(this.responseText);      
-        const { root, files } = data;
-        //sort
-        console.log(files)
-        files.sort((a , b) => a.isfile - b.isfile);
-        for (i in files) {
-            const { name, isfile } = files[i];
-            
-            const filewidget = document.createElement('li');
+const widget = document.querySelector('#dir');
 
-            const icon = document.createElement('div');
-            icon.innerHTML = isfile ? 'file' : 'folder';
-            const nameplate = document.createElement('div');
-            if (isfile) {
-            } else {
-                nameplate.addEventListener('click', function() {
-                    console.log(1);
-                    readdir(dir ? dir + '/' + name : '/' + name)
-                    return false;
+const xhr = new XMLHttpRequest();
+xhr.onload = function() {
+    data = JSON.parse(this.responseText);
 
-                });
-            }
-            nameplate.innerHTML = name
-            
-            filewidget.appendChild(icon);
-            filewidget.appendChild(nameplate);
+    createDir(data, widget)
 
-            index.appendChild(filewidget);
+}
+xhr.open('post', '/');
+xhr.setRequestHeader('content-type', 'application/json');
+xhr.send();
+
+function createDir(files, root) {
+    const ol = document.createElement('ol');
+    root.appendChild(ol);
+
+
+    files.sort((a, b) => (a.childlist ? 0 : 1) - (b.childlist ? 0 : 1));
+
+    for (i in files) {
+        const li = document.createElement('li');
+        li.classList.add('clickable');
+        ol.appendChild(li);
+
+        file = files[i];
+        if (file.childlist) {
+            li.addEventListener('click', fold)
         }
-    }
-    xhr.open('post', '/');
-    xhr.setRequestHeader('content-type', 'application/json');
-    xhr.send(JSON.stringify({ dir }));
 
+        const icon = document.createElement('div');
+        icon.innerText = file.childlist ? '▷' : '○'
+        
+        const name = document.createElement('div');
+        name.innerText = file.name;
+
+        li.appendChild(icon);
+        li.appendChild(name);
+
+    }
+}
+
+function fold() {
+    console.log('fold');
+    this.children[0].innerText = '▼'
+    this.addEventListener('click',expand);
+    this.removeEventListener('click', fold);
 }
 
 
-readdir();
+function expand() {
+    console.log('expand');
+    this.children[0].innerText = '▷'
+    this.addEventListener('click', fold);
+    this.removeEventListener('click', expand);
+
+
+}

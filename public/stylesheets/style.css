@@ -13,7 +13,14 @@ html, body {
 #dir li {
     display:flex;
 }
+#dir li:hover {
+    background-color: #777;
+}
 
 #dir li * {
     margin-right: 10px;
+}
+
+#dir .clickable {
+    cursor: pointer;
 }
