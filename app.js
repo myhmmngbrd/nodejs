@@ -30,7 +30,7 @@ async function readAllDir(dir) {
         const stats = await fs.lstat(path.join(dir, name));
         const isfile = await stats.isFile();
         const childlist = isfile ? null : await readAllDir(path.join(dir, name));
-        filelist.push({ name, childlist });
+        filelist.push({ name, childlist, expanded : false });
     }
     return filelist;
 }

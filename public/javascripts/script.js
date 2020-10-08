@@ -1,60 +1,119 @@
 
+class MyDirectory {
+    constructor(root) {
+        return (async () => {
+            const ol = document.createElement('ol');
+            root.appendChild(ol);
 
-const widget = document.querySelector('#dir');
+            const files = await this.getFileList();
+            files.sort((a, b) => !a.childlist - !b.childlist);
 
-const xhr = new XMLHttpRequest();
-xhr.onload = function() {
-    data = JSON.parse(this.responseText);
+            console.log(files);
 
-    createDir(data, widget)
+            MyDirectory.createBranch(files, ol);
+        })();
+    }
 
-}
-xhr.open('post', '/');
-xhr.setRequestHeader('content-type', 'application/json');
-xhr.send();
+    getFileList() {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.onload = function() {
+                resolve(JSON.parse(this.responseText));
+            };
+            xhr.onerror = function() {
+                reject({
+                    status: this.status,
+                    statusText: this.statusText,
+                });
+            };
+            xhr.open('post', '/');
+            xhr.send();
+        });
+    }
 
-function createDir(files, root) {
-    const ol = document.createElement('ol');
-    root.appendChild(ol);
+    static createBranch(files, stem, parentDir = null, index = 0, depth = 0) {
+
+        for (let i in files) {
+            const file = files[i];
+            
+            const li = document.createElement('li');
+            li.classList.add('clickable');       
+            
+            if (file.childlist) {
+                li.childlist = file.childlist;
+                li.parentDir = parentDir;
+                li.depth = depth
+                li.addEventListener('click', MyDirectory.expand);
+            }
+
+            const icon = document.createElement('div');
+            icon.innerHTML = '&nbsp;'.repeat(depth * 2) + (!file.childlist ? '○': '▷');
+            const name = document.createElement('div');
+            name.innerText = file.name;
+
+            li.appendChild(icon);
+            li.appendChild(name);
+
+            if (stem.children[++index]) {
+                stem.insertBefore(li, stem.children[index]);
+            } else {
+                stem.appendChild(li);
+            }
+        }
+    }
+
+    static expand() {
+        this.children[0].innerHTML = '&nbsp;'.repeat(this.depth * 2) + '▼';
 
 
-    files.sort((a, b) => (a.childlist ? 0 : 1) - (b.childlist ? 0 : 1));
+        this.descendantNum = 0;
+        let dir = this
+        do {
+            dir.descendantNum += this.childlist.length;
+            console.log(dir.descendantNum);
+        } while((dir = dir.parentDir));
 
-    for (i in files) {
-        const li = document.createElement('li');
-        li.classList.add('clickable');
-        ol.appendChild(li);
+        const [files, stem, parentDir, index, depth] = [
+            this.childlist,
+            this.parentNode,
+            this,
+            [].indexOf.call(this.parentNode.children, this),
+            this.depth + 1
+        ]
+        MyDirectory.createBranch(files, stem, parentDir, index, depth);
 
-        file = files[i];
-        if (file.childlist) {
-            li.addEventListener('click', fold)
+        this.removeEventListener('click', MyDirectory.expand);
+        this.addEventListener('click', MyDirectory.fold);
+    }
+    
+    static fold() {
+
+        console.log(this.descendantNum);
+
+        this.children[0].innerHTML = '&nbsp;'.repeat(this.depth * 2) + '▷';
+
+        let dir = this
+        while ((dir = dir.parentDir)) {
+            dir.descendantNum -= this.descendantNum;
         }
 
-        const icon = document.createElement('div');
-        icon.innerText = file.childlist ? '▷' : '○'
-        
-        const name = document.createElement('div');
-        name.innerText = file.name;
+        const stem = this.parentNode
+        const index = [].indexOf.call(stem.children, this);
 
-        li.appendChild(icon);
-        li.appendChild(name);
+        for (let i=0; i<this.descendantNum; i++) {
+            stem.removeChild(stem.children[index + 1]);
+        }
 
+        this.descendantNum = 0;
+
+        this.removeEventListener('click', MyDirectory.fold);
+        this.addEventListener('click', MyDirectory.expand);
     }
 }
 
-function fold() {
-    console.log('fold');
-    this.children[0].innerText = '▼'
-    this.addEventListener('click',expand);
-    this.removeEventListener('click', fold);
-}
 
 
-function expand() {
-    console.log('expand');
-    this.children[0].innerText = '▷'
-    this.addEventListener('click', fold);
-    this.removeEventListener('click', expand);
+widget = document.querySelector('#dir');
+new MyDirectory(widget);
 
 
-}
