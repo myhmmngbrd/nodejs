@@ -24,3 +24,15 @@ html, body {
 #dir .clickable {
     cursor: pointer;
 }
+
+#dir li.selected {
+    background-color:#039;
+    color:#fff;
+}
+
+#dir .folder {
+    color: #d99;
+}
+#dir .file {
+    color: #ddd;
+}

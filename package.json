@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "nodemon app2.js"
   },
   "repository": {
     "type": "git",
@@ -16,5 +16,7 @@
     "url": "https://github.com/myhmmngbrd/nodejs/issues"
   },
   "homepage": "https://github.com/myhmmngbrd/nodejs#readme",
-  "dependencies": {}
+  "dependencies": {
+    "mysql2": "^2.2.5"
+  }
 }
